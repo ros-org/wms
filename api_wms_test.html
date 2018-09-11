@@ -1,0 +1,118 @@
+<html>
+<meta http-equiv="Content-Type" content="text/html"; charset="utf-8">
+    <head>
+        <title>WMS-API TEST(WebSocket)</title>
+    </head>
+    <body>
+        <h1>WMS-API TEST(WebSocket)</h1>
+        <p>
+            <button onClick="initWebSocket();">Connect</button>
+            <button onClick="stopWebSocket();">Disconnect</button>
+            <button onClick="checkSocket();">State</button>
+        </p>
+        <p>
+            <textarea id="debugTextArea" style="width:400px;height:200px;"></textarea>
+        </p>
+        <p>
+            <input type="text" id="inputText" value="1234567,PREASSIGN,A1,1,0" style="width:300px;" onkeydown="if(event.keyCode==13)sendMessage();"/>
+	    <select onchange="showMsg(this)">
+		<option value ="1234567,PREASSIGN,A1,1,0">预分配申请</option>
+		<option value ="1234567,CANCEL_PREASSIGN,A1,1,0">预分配取消</option>
+		<option value="1234567,IN_STOCK,A1,01,1,MOTOR">入库申请</option>
+		<option value="1234567,OUT_STOCK,A1,01,1">出库申请</option>
+		<option value="1234567,NEWSTORE,A11,websocket测试库别,H2">新建库别</option>
+		<option value="1234567,NEWSTORAGE,A11,07,H2">新建储位</option>
+	    </select>
+            <button onClick="sendMessage();">Send</button>
+        </p>
+
+        <script type="text/javascript">
+            var debugTextArea = document.getElementById("debugTextArea");
+            function debug(message) {
+                debugTextArea.value += message + "\n";
+                debugTextArea.scrollTop = debugTextArea.scrollHeight;
+            }
+
+	    function showMsg(obj) {
+		var msg = obj.value;
+		document.getElementById("inputText").value = msg;
+ 	    }
+
+            function sendMessage() {
+                var msg = document.getElementById("inputText").value;
+
+                if ( websocket != null )
+                {
+                    //document.getElementById("inputText").value = "";
+                    websocket.send( msg );
+		    debug("SEND:"+msg);
+                    console.log( "string sent :", '"'+msg+'"' );
+                }
+            }
+
+            var wsUri = "ws://localhost:1234";
+            var websocket = null;
+
+            function initWebSocket() {
+                try {
+                    if (typeof MozWebSocket == 'function')
+                        WebSocket = MozWebSocket;
+                    if ( websocket && websocket.readyState == 1 )
+                        websocket.close();
+                    websocket = new WebSocket( wsUri );
+                    websocket.onopen = function (evt) {
+                        debug("CONNECTED");
+                    };
+                    websocket.onclose = function (evt) {
+                        debug("DISCONNECTED");
+                    };
+                    websocket.onmessage = function (evt) {
+                        console.log( "Message received :", evt.data );
+                        debug("RECEIVE:"+evt.data+"\n" );
+                    };
+                    websocket.onerror = function (evt) {
+                        debug('ERROR: ' + evt.data);
+                    };
+                } catch (exception) {
+                    debug('ERROR: ' + exception);
+                }
+            }
+
+            function stopWebSocket() {
+                if (websocket)
+                    websocket.close();
+            }
+
+            function checkSocket() {
+                if (websocket != null) {
+                    var stateStr;
+                    switch (websocket.readyState) {
+                        case 0: {
+                            stateStr = "CONNECTING";
+                            break;
+                        }
+                        case 1: {
+                            stateStr = "OPEN";
+                            break;
+                        }
+                        case 2: {
+                            stateStr = "CLOSING";
+                            break;
+                        }
+                        case 3: {
+                            stateStr = "CLOSED";
+                            break;
+                        }
+                        default: {
+                            stateStr = "UNKNOW";
+                            break;
+                        }
+                    }
+                    debug("WebSocket state = " + websocket.readyState + " ( " + stateStr + " )");
+                } else {
+                    debug("WebSocket is null");
+                }
+            }
+        </script>
+    </body>
+</html>
