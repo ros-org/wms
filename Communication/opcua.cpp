@@ -19,47 +19,51 @@ opcua::opcua(UaString serverip, int serverport, UaString _username, UaString _pa
     node.updateFlag = false;
     ssa<<"A"<<_id;
     node.storage_no = ssa.str();
-    QString key = _store_no;
-    key.append("_").append(QString::fromStdString(ssa.str()));
-    node.value = _mapping_table.value(key).times;
+    node.value = -2;
+    //    QString key = _store_no;
+    //    key.append("_").append(QString::fromStdString(ssa.str()));
+    //    node.value = _mapping_table.value(key).times;
     vec_writenodes.push_back(node);
 
     ssa_end<<"::AsGlobalPV:AGV_A"<<_id<<"_ROBOT";
     node.nodeid = ssa_end.str();
-    node.value = 0;
+    node.value = -2;
     node.updateFlag = false;
     node.storage_no = ssa.str();
     vec_readnodes.push_back(node);
 
-    ssa_ready<<"::AsGlobalPV:AGV_A"<<_id<<"_ready";
-    node.nodeid = ssa_ready.str();
-    node.value = 0;
-    node.updateFlag = false;
-    node.storage_no = ssa.str();
-    // vec_readynodes.push_back(node);
+    //    ssa_ready<<"::AsGlobalPV:AGV_A"<<_id<<"_ready";
+    //    node.nodeid = ssa_ready.str();
+    //    node.value = 0;
+    //    node.updateFlag = false;
+    //    node.storage_no = ssa.str();
+    //    // vec_readynodes.push_back(node);
 
     ostringstream ssb_start, ssb_end, ssb_ready, ssb;
     ssb_start<<"::AsGlobalPV:AGV_B"<<_id<<"_AGV";
     node.nodeid = ssb_start.str();
-    node.value = 0;
     node.updateFlag = false;
     ssb<<"B"<<_id;
     node.storage_no = ssb.str();
+    node.value = -2;
+    //    key = _store_no;
+    //    key.append("_").append(QString::fromStdString(ssb.str()));
+    //    node.value = _mapping_table.value(key).times;
     vec_writenodes.push_back(node);
 
     ssb_end<<"::AsGlobalPV:AGV_B"<<_id<<"_ROBOT";
     node.nodeid = ssb_end.str();
-    node.value = 0;
+    node.value = -2;
     node.updateFlag = false;
     node.storage_no = ssb.str();
     vec_readnodes.push_back(node);
 
-    ssb_ready<<"::AsGlobalPV:AGV_B"<<_id<<"_ready";
-    node.nodeid = ssb_ready.str();
-    node.value = 0;
-    node.updateFlag = false;
-    node.storage_no = ssb.str();
-    //vec_readynodes.push_back(node);
+    //    ssb_ready<<"::AsGlobalPV:AGV_B"<<_id<<"_ready";
+    //    node.nodeid = ssb_ready.str();
+    //    node.value = 0;
+    //    node.updateFlag = false;
+    //    node.storage_no = ssb.str();
+    //    //vec_readynodes.push_back(node);
 #else
     opcnode node;
     ostringstream ssa_test;
@@ -75,9 +79,9 @@ opcua::opcua(UaString serverip, int serverport, UaString _username, UaString _pa
 #endif
 }
 
-bool opcua::readNode(opcnode & readnode, int selfvalue){
-    UaString idstring(readnode.nodeid.c_str());
-    UaNodeId node(idstring,readnode.index);
+bool opcua::readNode(int index){
+    UaString idstring(vec_readnodes[index].nodeid.c_str());
+    UaNodeId node(idstring,vec_readnodes[index].index);
 
     OpcUa_UInt32      count = 1;
     UaReadValueIds    nodesToRead;
@@ -124,14 +128,29 @@ bool opcua::readNode(opcnode & readnode, int selfvalue){
                     tempValue.toInt16(status);
                     int readvalue = status;
 
-                    if(readvalue != selfvalue)
-                    {
-                        readnode.updateFlag = true;
-                        readnode.value = readvalue;
-                        qDebug()<<"  Variable "<<node.toString().toUtf8()<<" count changed";
+                    if(readvalue != vec_readnodes[index].value){
+                        //diff value from last time
+                        if(readvalue != vec_readnodes[index].value+1){
+                            //init read or clear to zero
+                            vec_readnodes[index].value = readvalue;
+                            vec_readnodes[index].updateFlag = false;
+                            writenode_mutex.lock();
+                            vec_writenodes[index].value = readvalue;
+                            vec_writenodes[index].updateFlag = true;
+                            writenode_mutex.unlock();
+                        }else{
+                            //readvalue == vec_readnodes[index].value +1
+                            vec_readnodes[index].value = readvalue;
+                            vec_readnodes[index].updateFlag = true;
+                            writenode_mutex.lock();
+                            vec_writenodes[index].value = readvalue;
+                            vec_writenodes[index].updateFlag = false;
+                            writenode_mutex.unlock();
+                        }
+                        qDebug()<<"  Variable "<<node.toString().toUtf8()<<" value = "<<tempValue.toString().toUtf8();
                     }
 
-                    //qDebug()<<"  Variable "<<node.toString().toUtf8()<<" value = "<<tempValue.toString().toUtf8();
+
                 }
             }
             else
@@ -287,63 +306,45 @@ bool opcua::writeNode(opcnode &writenode){
 }
 void opcua::run()
 {
-    int ret = UaPlatformLayer::init();
-    if(ret !=0){
-        std::cout<<"init fail!"<<std::endl;
-    }
-
-    SessionSecurityInfo sessionSecurityInfo;
-    //TODO
-#ifdef TEST
-    sessionSecurityInfo.setAnonymousUserIdentity();
-#else
-    sessionSecurityInfo.setUserPasswordUserIdentity(username, password);
-#endif
-
-
-    UaStatus status;
-
-    qDebug() <<"\n\n****************************************************************\n";
-    qDebug() <<"** Try to connect to selected server\n";
-
-
-
-    SessionConnectInfo sessionConnectInfo;
-    sessionConnectInfo.sApplicationName = "";
-    sessionConnectInfo.sApplicationUri  = "";
-    sessionConnectInfo.sProductUri      = "";
-    //TODO
-    sessionConnectInfo.sSessionName     = UaString("Client_Cpp_SDK@%1").arg("123");
-    //    sessionConnectInfo.sSessionName     = "";
-    sessionConnectInfo.bAutomaticReconnect = OpcUa_True;
-
-    UaString serveraddress=UaString("opc.tcp://%1:%2").arg(ip).arg(port);
-
-    //TEST
-    //    emit sig_readOpcMsg("A2", true, QString::fromStdString(ip.toUtf8()), port);
-
-    while(1)
+    while(true)
     {
-        g_pUaSession = new UaSession();
+        int ret = UaPlatformLayer::init();
+        if(ret !=0){
+            std::cerr<<"!!!!!!!!!!UaPlatformLayer init fail!!!!!!!!"<<std::endl;
+            //严重错误，直接退出
+            return ;
+        }
 
+        SessionSecurityInfo sessionSecurityInfo;
+        sessionSecurityInfo.setUserPasswordUserIdentity(username, password);
+
+        UaStatus status;
+        SessionConnectInfo sessionConnectInfo;
+        sessionConnectInfo.sApplicationName = "";
+        sessionConnectInfo.sApplicationUri  = "";
+        sessionConnectInfo.sProductUri      = "";
+        sessionConnectInfo.sSessionName     = UaString("Client_Cpp_SDK@%1").arg("123");
+        sessionConnectInfo.bAutomaticReconnect = OpcUa_True;
+
+        UaString serveraddress=UaString("opc.tcp://%1:%2").arg(ip).arg(port);
+
+        g_pUaSession = new UaSession();
+        int kk = 0;
         do
         {
-            /*********************************************************************
-             Connect to OPC UA Server
-            **********************************************************************/
-
             status = g_pUaSession->connect(
-                        //"opc.tcp://172.16.119.31:48010",
                         serveraddress,
-                        //"opc.tcp://172.16.119.32:4840",
-                        sessionConnectInfo,  // General settings for connection
-                        sessionSecurityInfo, // Security settings
+                        sessionConnectInfo,
+                        sessionSecurityInfo,
                         NULL);        // Callback interface
             qDebug()<<"try to connect...";
             sleep(5);
+        }while (!status.isGood() && ++kk<4);
 
-            /*********************************************************************/
-        }while (!status.isGood());
+        //多次重连还是失败的话，重新初始化
+        if(!status.isGood())continue;
+
+        qDebug()<<"connect is ok";
 
         registerNodes(vec_readnodes);
         registerNodes(vec_writenodes);
@@ -353,34 +354,17 @@ void opcua::run()
             int ret = 0;
             for(int i = 0; i < vec_readnodes.size(); i++)
             {
-                ret += readNode(vec_readnodes.at(i), vec_writenodes.at(i).value);
+                ret += readNode(i);
                 opcnode node = vec_readnodes.at(i);
                 if(node.updateFlag)
                 {
-                    vec_writenodes.at(i).value = vec_readnodes.at(i).value;
                     //TODO 若机械臂码完一盘货，则通知wms更新库存
                     qDebug()<<"**  "<<QString::fromStdString(node.storage_no)<<" is full, update wms!\n";
                     emit sig_readOpcMsg(QString::fromStdString(node.storage_no), node.value, QString::fromStdString(ip.toUtf8()), port);
                     vec_readnodes.at(i).updateFlag = false;
                 }
             }
-            /*
-            for(int i = 0; i < vec_readynodes.size(); i++)
-            {
-                ret += readNode(vec_readynodes.at(i));
-                opcnode node = vec_readynodes.at(i);
-                if(node.updateFlag)
-                {
-                    if(node.value)
-                    {
-                        //TODO 若机械臂还剩两盘货，则通知小车准备
-                        qDebug()<<"**  "<<QString::fromStdString(node.storage_no)<<" 2 lap left, forklift ready!\n";
-                        emit sig_readyOpcMsg(QString::fromStdString(node.storage_no), node.value, QString::fromStdString(ip.toUtf8()), port);
-                    }
-                    vec_readynodes.at(i).updateFlag = false;
-                }
-            }
-*/
+
             if(ret == 0)
             {
                 //可能是断线 重新连接
@@ -389,7 +373,6 @@ void opcua::run()
                     delete g_pUaSession;
                     g_pUaSession = NULL;
                     qDebug() <<"** Error: UaSession::disconnect\n";
-                    qDebug() <<"****************************************************************\n";
                 }
                 break;
             }
@@ -409,10 +392,11 @@ void opcua::run()
             }
             writenode_mutex.unlock();
 
-            sleep(1);
-
+            sleep(1);//每隔1秒进行一次查询和写入
         }
+
+        sleep(3);
     }
-    //    }
+
     return;
 }

@@ -197,7 +197,7 @@ void APIThread::generate_task(QString tasktype, QString in_store_no, QString in_
         if(RET_OK == ret)
         {
             //[agvid] [优先级] [do] [where] [do] [where]
-            task.append("0 1 get_good ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(in_store_no).append(" ").append(in_storage_no).append(" ").append(key_part_no)\
+            task.append("1 1 get_good ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(in_store_no).append(" ").append(in_storage_no).append(" ").append(key_part_no)\
                     .append(" put_good ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(to_store).append(" ").append(storage_no).append(" ").append(key_part_no);
             qDebug()<<"wms receive task:"<<task;
             QString msg_len = QString::number(task.length()+4).rightJustified(4, '0');
@@ -260,7 +260,7 @@ void APIThread::auto_generate_task()
         if(RET_OK == ret_out && RET_OK == ret_in)
         {
             //[agvid] [优先级] [do] [where] [do] [where]
-            task.append("0 ").append(priority).append(" pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)\
+            task.append("1 ").append(priority).append(" pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)\
                     .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no);
             QString msg_len = QString::number(task.length()+4).rightJustified(4, '0');
             QString send_task;

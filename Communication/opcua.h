@@ -49,7 +49,7 @@ public:
     UaSession *g_pUaSession = NULL;
     opcua(UaString serverip, int serverport, UaString _username, UaString _password, int _id, QString _store_no, QMap<QString, STATION_INFO> mapping_table, QObject *parent = 0);
     void run();
-    bool readNode(opcnode & readnode, int selfvalue);
+    bool readNode(int index);
     bool writeNode(opcnode &writenode);
     void registerNodes(vector<opcnode> nodes);
 public slots:

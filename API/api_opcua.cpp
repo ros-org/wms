@@ -67,7 +67,7 @@ void APIThread::praseOpcMsg(QString storage_no, int times)
                     //[agvid] [优先级] [do] [where] [do] [where]
                     //码垛相关任务优先级最高
                     //TODO 指定x号车
-                    task.append("0 2 pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no).append(" ").append(key_part_no)\
+                    task.append("1 2 pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no).append(" ").append(key_part_no)\
                             .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no)\
                             .append(" pick ").append(QString::number(mapping_table.value(key_tray_out).map_id)).append(" ").append(store_emptytray).append(" ").append(storage_no_tray).append(" ").append(QString::number(TRAY))\
                             .append(" put ").append(QString::number(mapping_table.value(key_tray_in).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no).append(" ").append(QString::number(TRAY));
@@ -117,7 +117,7 @@ void APIThread::praseOpcReadyMsg(QString storage_no, bool flag)
 
         QString task;
         //准备码垛
-        task.append("0 2 move ").append(QString::number(mapping_table.value(station_key).map_readyid));
+        task.append("1 2 move ").append(QString::number(mapping_table.value(station_key).map_readyid));
 
         QString msg_len = QString::number(task.length()+4).rightJustified(4, '0');
         QString send_task;
