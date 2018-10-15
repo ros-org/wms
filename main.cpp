@@ -2,8 +2,9 @@
 #include "Interface/interface_wms.h"
 #include "Communication/websocketserver.h"
 #include "Communication/fortuneserver.h"
-#include "Communication/opcua.h"
 #include "API/api_thread.h"
+#include "TcpModbus/master.h"
+#include "Communication/tcpmodbus.h"
 
 #include <QDebug>
 #include <QFile>
@@ -42,7 +43,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext& Context, con
     QString log;
     log += QDateTime::currentDateTime().toLocalTime().toString("[hh:mm:ss.zzz]" ) + QString(" : %1\n").arg(txt);
     QByteArray temp = log.toLocal8Bit();
-    logFile.write(temp.data());
+    logFile.write(temp);
     logFile.flush();
 
     // mutex.unlock();
@@ -52,7 +53,13 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext& Context, con
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    qInstallMessageHandler(customMessageHandler);
+
+
+    Master master;
+    master.test();
+
+    return 0;
+
     QDir dir;
     if(!dir.exists("logs"))
     {
@@ -60,6 +67,9 @@ int main(int argc, char *argv[])
     }
     logFile.setFileName("logs/wms_debuglog_"+QDate::currentDate().toString("yyyyMMdd")+"_"+QTime::currentTime().toString("hhmmss")+".txt");
     logFile.open(QIODevice::WriteOnly | QIODevice::Append);
+
+    qInstallMessageHandler(customMessageHandler);
+
 
     /*
     //直接接口调用的方式
@@ -108,32 +118,29 @@ int main(int argc, char *argv[])
         qDebug()<<"The server is running on IP:"<<serverAddress.toString()<<"port:"<<tcp_server->serverPort();
     }
 
-    sleep(10);
-    //tcp://hrg:48010
-#ifndef TEST
-    opcua *opc_client1 = new opcua("10.20.2.61", 4842, "Admin", "123456", 1, "F3_MD", mapping_table);
-    opcua *opc_client2 = new opcua("10.20.2.62", 4842, "Admin", "123456", 2, "F3_MD", mapping_table);
-    opcua *opc_client3 = new opcua("10.20.2.63", 4842, "Admin", "123456", 3, "F3_MD", mapping_table);
-#else
-    opcua *opc_client = new opcua("hrg", 48010, "Admin", "123456", 2, "F3_MD", mapping_table);
-#endif
-    QObject::connect(opc_client1, SIGNAL(sig_readOpcMsg(QString,int,QString,int)), api_thread, SLOT(slot_readOpcMsg(QString,int,QString,int)));
-    QObject::connect(api_thread, SIGNAL(sig_writeOpcMsg(QString, bool)), opc_client1, SLOT(slot_writeOpcMsg(QString,bool)));
 
-    QObject::connect(opc_client2, SIGNAL(sig_readOpcMsg(QString,int,QString,int)), api_thread, SLOT(slot_readOpcMsg(QString,int,QString,int)));
-    QObject::connect(api_thread, SIGNAL(sig_writeOpcMsg(QString, bool)), opc_client2, SLOT(slot_writeOpcMsg(QString,bool)));
+    TcpModbus *tm1 = new TcpModbus("10.20.2.61",502,1,"F3_MD");
 
-    QObject::connect(opc_client3, SIGNAL(sig_readOpcMsg(QString,int,QString,int)), api_thread, SLOT(slot_readOpcMsg(QString,int,QString,int)));
-    QObject::connect(api_thread, SIGNAL(sig_writeOpcMsg(QString, bool)), opc_client3, SLOT(slot_writeOpcMsg(QString,bool)));
+    TcpModbus *tm2 = new TcpModbus("10.20.2.62",502,2,"F3_MD");
 
-    opc_client1->start();
-    sleep(5);
-    opc_client2->start();
-    sleep(5);
-    opc_client3->start();
+    TcpModbus *tm3 = new TcpModbus("10.20.2.63",502,3,"F3_MD");
 
 
-    //    return 0;
+    QObject::connect(tm1, SIGNAL(sig_readOpcMsg(QString,int,QString,int)), api_thread, SLOT(slot_readOpcMsg(QString,int,QString,int)));
+    QObject::connect(api_thread, SIGNAL(sig_writeOpcMsg(QString, bool)), tm1, SLOT(slot_writeOpcMsg(QString,bool)));
+
+    QObject::connect(tm2, SIGNAL(sig_readOpcMsg(QString,int,QString,int)), api_thread, SLOT(slot_readOpcMsg(QString,int,QString,int)));
+    QObject::connect(api_thread, SIGNAL(sig_writeOpcMsg(QString, bool)), tm2, SLOT(slot_writeOpcMsg(QString,bool)));
+
+    QObject::connect(tm3, SIGNAL(sig_readOpcMsg(QString,int,QString,int)), api_thread, SLOT(slot_readOpcMsg(QString,int,QString,int)));
+    QObject::connect(api_thread, SIGNAL(sig_writeOpcMsg(QString, bool)), tm3, SLOT(slot_writeOpcMsg(QString,bool)));
+
+    tm1->start();
+
+    tm2->start();
+
+    tm3->start();
+
     return a.exec();
 }
 
