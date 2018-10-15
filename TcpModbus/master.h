@@ -6,8 +6,6 @@
 #include <QMutex>
 #include <QTimer>
 
-
-
 /*
  * 东药项目 产线对接 tcp - modbus
  * 该项目只用到了 读单个输入寄存器 和 写单个保持寄存器
@@ -33,7 +31,7 @@ public:
 
     void startQuery();
     void startWrite();
-private slots:
+public slots:
     void slotStateChanged(QAbstractSocket::SocketState s);
     void slotReadyRead();
     void slotTimeToQuery();
@@ -83,6 +81,5 @@ private:
     const int fctExceptionOffset = 128;
 
 };
-
 
 #endif // MASTER_H

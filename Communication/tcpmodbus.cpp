@@ -14,8 +14,7 @@ TcpModbus::TcpModbus(QString _ip, int _port, int _id, bool _haveB, QObject *pare
     writeB(-2),
     updateA(false),
     updateB(false),
-    quit(false),
-    __id(1)
+    quit(false)
 {
     store_no_a = QString("A%1").arg(id);
     store_no_b = QString("B%1").arg(id);
@@ -29,13 +28,15 @@ TcpModbus::~TcpModbus()
 
 void TcpModbus::writeValue(bool AOrB)
 {
+    static int write_id = 256;
+    if(write_id>511)write_id = 256;
     if(AOrB && updateA){
         QByteArray qba(2,'\0');
 
         qba[0] = (char)((writeA>>8) & 0xFF);
         qba[1] = (char)(writeA & 0xFF);
 
-        if(master->WriteSingleRegister(++__id,ADD_WRITE_A,qba)){
+        if(master->WriteSingleRegister(++write_id,ADD_WRITE_A,qba)){
             updateA = false;
         }
     }
@@ -45,7 +46,7 @@ void TcpModbus::writeValue(bool AOrB)
         qba[0] = (char)((writeA>>8) & 0xFF);
         qba[1] = (char)(writeA & 0xFF);
 
-        if(master->WriteSingleRegister(++__id,ADD_WRITE_B,qba)){
+        if(master->WriteSingleRegister(++write_id,ADD_WRITE_B,qba)){
             updateB = false;
         }
     }
@@ -53,11 +54,12 @@ void TcpModbus::writeValue(bool AOrB)
 
 void TcpModbus::readValue(bool AOrB)
 {
-
+    static int read_id = 0;
+    if(read_id>255)read_id = 0;
     QByteArray qba;
     int add = ADD_READ_A;
     if(!AOrB)add = ADD_READ_B;
-    if(master->ReadInputRegister(++__id,add,1,qba))
+    if(master->ReadInputRegister(++read_id,add,1,qba))
     {
         int high = (char)qba[0];
         high = (high&0xff)<<8;
@@ -109,17 +111,17 @@ void TcpModbus::run()
         readValue(true);
 
         //read b;
-        if(haveB)
+        if(haveB){
             readValue(false);
-
+        }
 
         //write a;
         writeValue(true);
 
-
         //write b;
-        if(haveB)
+        if(haveB){
             writeValue(false);
+        }
 
         QyhSleep(1000);
     }

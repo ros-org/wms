@@ -5,6 +5,7 @@
 #include "API/api_thread.h"
 #include "TcpModbus/master.h"
 #include "Communication/tcpmodbus.h"
+#include "common.h"
 
 #include <QDebug>
 #include <QFile>
@@ -54,21 +55,15 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+    //    QDir dir;
+    //    if(!dir.exists("logs"))
+    //    {
+    //        dir.mkdir("logs");
+    //    }
+    //    logFile.setFileName("logs/wms_debuglog_"+QDate::currentDate().toString("yyyyMMdd")+"_"+QTime::currentTime().toString("hhmmss")+".txt");
+    //    logFile.open(QIODevice::WriteOnly | QIODevice::Append);
 
-    Master master;
-    master.test();
-
-    return 0;
-
-    QDir dir;
-    if(!dir.exists("logs"))
-    {
-        dir.mkdir("logs");
-    }
-    logFile.setFileName("logs/wms_debuglog_"+QDate::currentDate().toString("yyyyMMdd")+"_"+QTime::currentTime().toString("hhmmss")+".txt");
-    logFile.open(QIODevice::WriteOnly | QIODevice::Append);
-
-    qInstallMessageHandler(customMessageHandler);
+    //    qInstallMessageHandler(customMessageHandler);
 
 
     /*

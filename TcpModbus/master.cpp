@@ -4,7 +4,6 @@
 #include <QMutexLocker>
 #include "../common.h"
 
-
 /*
  * tcp modbus 协议。组成部分三部分
  * mbap + 功能代码 + 数据
@@ -60,6 +59,7 @@ void Master::connectToHost(QString _ip, int _port)
 
     if(socket){
         socket->close();
+        delete socket;
     }
     ip = _ip;
     port = _port;
@@ -96,7 +96,6 @@ void Master::slotStateChanged(QAbstractSocket::SocketState s)
     }
 
     if(s == QAbstractSocket::UnconnectedState || s == QAbstractSocket::ClosingState){
-        QyhSleep(5000);
         socket->connectToHost(ip,port);
     }
 }
@@ -262,5 +261,3 @@ void Master::test()
     startQuery();
     //startWrite();
 }
-
-

@@ -5,10 +5,10 @@
 #include <QThread>
 #include "../TcpModbus/master.h"
 
-#define ADD_READ_A   24576
-#define ADD_READ_B   24578
-#define ADD_WRITE_A   8192
-#define ADD_WRITE_B   8194
+#define ADD_READ_A  8192
+#define ADD_READ_B  8194
+#define ADD_WRITE_A    24576
+#define ADD_WRITE_B    24578
 
 class TcpModbus : public QThread
 {
@@ -27,8 +27,6 @@ private:
     void readValue(bool AOrB);
 
     void writeValue(bool AOrB);
-
-    int __id;
 
     Master *master;
 
