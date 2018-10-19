@@ -68,7 +68,7 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
                 break;
             }
             QString store_no = request.take("store_no").toString();
-            QVector< QVector<QString> > res;
+            QVector< QStringList > res;
             RET_CODE ret = inter_wms->db_queryStorage(store_no, res);
             response.insert("retcode", ret);
             if(RET_OK == ret)
@@ -152,7 +152,7 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
             //                if(RET_OK == ret_out && RET_OK == ret_in)
             //                {
             //                    //[agvid] [优先级] [do] [where] [do] [where]
-            //                    task.append("0 1 pick ").append(mapping_table.value(key_out)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)\
+            //                    task.append("0 1 pick ").append(mapping_table.value(key_out)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)
             //                            .append(" put ").append(mapping_table.value(key_in)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no);
             //                    qDebug()<<"wms receive task:"<<task;
             //                    //send to agv_dispatch
@@ -169,6 +169,31 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
                 response.insert("retmsg", "任务发送失败,无可用库位");
                 response.insert("retcode", RET_NOT_AVAILABLE);
             }
+            break;
+        }
+        case 4:{
+            //取消预分配
+            QString store_no = request.value("store_no").toString();
+            QString storage_no = request.value("storage_no").toString();
+            RET_CODE ret = inter_wms->db_cancelPreAssign(store_no, storage_no);
+//            response.insert("retcode", ret);
+//            if(RET_OK == ret)
+//            {
+//                response.insert("retmsg", "储位信息更新成功");
+//                updateClientStorage(store_no, storage_no, material_id, status);
+//            }
+//            else
+//            {
+//                RET_CODE ret = inter_wms->db_queryStorageStatus(store_no, storage_no, material_id, status);
+//                if(RET_OK == ret && status == 2)
+//                {
+//                    status = (material_id.size()) ? 1: 0;
+//                    //恢复为之前的状态
+//                    updateClientStorage(store_no, storage_no, material_id, status);
+//                }
+//                response.insert("retmsg", "储位信息更新失败");
+//            }
+
             break;
         }
         default:
@@ -235,7 +260,7 @@ void APIThread::auto_generate_task()
     inter_wms->db_updateTaskStatus("", 2, "");
 
     //生成任务
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     inter_wms->db_queryTaskAvailable(res);
 
     for(int i = 0; i < res.size(); i++)

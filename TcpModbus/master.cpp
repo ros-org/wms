@@ -88,7 +88,7 @@ bool Master::ReadInputRegister(int id, int startAddress, int numInputs, QByteArr
 
 void Master::slotStateChanged(QAbstractSocket::SocketState s)
 {
-    qDebug()<<"socket state = "<<s;
+    //qDebug()<<"socket state = "<<s;
     if(s == QAbstractSocket::ConnectedState){
         isConnected = true;
     }else{

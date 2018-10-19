@@ -25,6 +25,8 @@ public:
     RET_CODE db_out_preAssign(QString store_no, int agv_id, QString &storage_no, QString key_part_no);
     //取消预分配
     RET_CODE db_cancelPreAssign(QString store_no, int agv_id, int type);
+    //取消预分配
+    RET_CODE db_cancelPreAssign(QString store_no, QString storag_no);
     //记日志
     bool db_log(QString store_no, QString storage_no, QString user_id, int type,  QString key_part_no);
     //新增库别
@@ -38,7 +40,7 @@ public:
     //查询地图映射表
     RET_CODE db_queryStorageMap(QMap<QString, STATION_INFO> &mapping_table);
     //查询库存
-    RET_CODE db_queryStorage(QString store_no, QVector< QVector<QString> > &res);
+    RET_CODE db_queryStorage(QString store_no, QVector< QStringList > &res);
     //查询库位信息
     RET_CODE db_queryStorageStatus(QString store_no, QString storage_no, QString & key_part_no, int & status);
     //查询可用储位数量
@@ -46,7 +48,7 @@ public:
     //更新任务信息
     RET_CODE db_updateTaskStatus(QString store_no, int status, QString to_store);
     //查询目前可以执行的任务
-    RET_CODE db_queryTaskAvailable(QVector< QVector<QString> > &res);
+    RET_CODE db_queryTaskAvailable(QVector< QStringList > &res);
     //计数类储位预分配
     RET_CODE db_counter_preAssign(QString store_no, int agv_id, QString &storage_no, QString key_part_no);
     //查询任务信息

@@ -17,7 +17,7 @@ public:
     //数据库删除
     bool DBDelete(QString delete_sql, QString &err_msg);
     //数据库查询
-    bool DBQuery(QString query_sql, int & rownum, int & colnum, QVector<QVector<QString> >& res, QString &err_msg);
+    bool DBQuery(QString query_sql, int & rownum, int & colnum, QVector<QStringList >& res, QString &err_msg);
 private:
     QSqlDatabase db;
     bool conSucc;

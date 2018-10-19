@@ -35,7 +35,7 @@ void TcpModbus::writeValue(bool AOrB)
 
         qba[0] = (char)((writeA>>8) & 0xFF);
         qba[1] = (char)(writeA & 0xFF);
-
+        qDebug()<<"write A"<<id<<"============="<<writeA;
         if(master->WriteSingleRegister(++write_id,ADD_WRITE_A,qba)){
             updateA = false;
         }
@@ -45,7 +45,7 @@ void TcpModbus::writeValue(bool AOrB)
 
         qba[0] = (char)((writeA>>8) & 0xFF);
         qba[1] = (char)(writeA & 0xFF);
-
+        qDebug()<<"write B"<<id<<"============="<<writeB;
         if(master->WriteSingleRegister(++write_id,ADD_WRITE_B,qba)){
             updateB = false;
         }
@@ -69,7 +69,7 @@ void TcpModbus::readValue(bool AOrB)
 
         if(AOrB){
             if(new_read != readA){
-                qDebug()<<"line "<<id<<" read A============="<<new_read;
+                qDebug()<<"line  read A"<<id<<"============="<<new_read;
 
                 if(new_read != readA+1){
                     readA = new_read;
@@ -84,7 +84,7 @@ void TcpModbus::readValue(bool AOrB)
             }
         }else{
             if(new_read != readB){
-                qDebug()<<"line "<<id<<" read B============="<<new_read;
+                qDebug()<<"line  read B"<<id<<"============="<<new_read;
                 if(new_read != readB+1){
                     readB = new_read;
                     writeB = new_read;

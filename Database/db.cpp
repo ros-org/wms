@@ -164,7 +164,7 @@ bool DB::DBDelete(QString delete_sql, QString &err_msg)
  * Author/Date:
  * Modefy/Date:
 ********************************************************************************************************/
-bool DB::DBQuery(QString query_sql, int & rownum, int & colnum, QVector< QVector<QString> >& res, QString &err_msg)
+bool DB::DBQuery(QString query_sql, int & rownum, int & colnum, QVector< QStringList >& res, QString &err_msg)
 {
     rownum = 0;
     colnum = 0;
@@ -183,7 +183,7 @@ bool DB::DBQuery(QString query_sql, int & rownum, int & colnum, QVector< QVector
                 QSqlRecord record = query.record();
                 colnum = record.count();
             }
-            QVector<QString> res_line;
+            QStringList res_line;
             for(int i = 0; i < colnum; i++)
             {
                 res_line.push_back(query.value(i).toString());

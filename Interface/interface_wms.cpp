@@ -55,18 +55,23 @@ void InterfaceWMS::db_disconnect()
  *
  * Author/Date:
  * Modefy/Date:
+ * modify: 自动展板机不记录数量，只记录是否可用，可用情况下，轮流使用
+ *          count > 0 可用  count<=0 不可用
+ * 除了展板机也不会有其他count类型的 ，key part no 略去不用
 ********************************************************************************************************/
 RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QString &storage_no, QString key_part_no)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    static int use_index = 0;
+    QVector< QStringList > res;
     QString err_msg;
     //预分配查询:（取其中一笔）
     QString query_sql;
 
     //task preassign
-    query_sql = QString("SELECT STORAGE_NO, MAX(COUNT) FROM R_STORE_STATUS_T WHERE STORE_NO='%1' ORDER BY STATUS DESC, STORAGE_NO ASC limit 1")\
-            .arg(store_no);
+    query_sql = QString("SELECT STORAGE_NO FROM R_STORE_STATUS_T WHERE STORE_NO='%1' AND STATUS='0' AND count >0 ").arg(store_no);
+//    query_sql = QString("SELECT STORAGE_NO, MAX(COUNT) FROM R_STORE_STATUS_T WHERE STORE_NO='%1' ORDER BY STATUS DESC, STORAGE_NO ASC limit 1")
+//            .arg(store_no);
     bool ret = m_pDB->DBQuery(query_sql, rownum, colnum, res, err_msg);
     //    qDebug()<<rownum;
 
@@ -75,22 +80,20 @@ RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QStrin
         return RET_DB_ERROR;
     }
 
-    if(rownum == 0)
-    {
-        return RET_NOT_AVAILABLE;
-    }
-    else if(rownum == 1 && res.at(0).at(1).toInt() <= 0)
+    if(rownum <= 0)
     {
         return RET_NOT_AVAILABLE;
     }
     else
     {
-        storage_no = res.at(0).at(0);
+        storage_no = res.at(use_index%rownum).at(0);
         qDebug()<<"预分配的储位:"<<storage_no<<"Material:"<<res.at(0).at(1);
         //预分配更新:
-        QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',COUNT=COUNT-1,AGV_ID=%1,WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
+        QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',AGV_ID=%1,WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
         ret = m_pDB->DBUpdate(update_sql, err_msg);
-
+        if(ret){
+            ++use_index;
+        }
         return ret ? RET_OK : RET_DB_ERROR;
     }
 }
@@ -105,7 +108,7 @@ RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QStrin
 RET_CODE InterfaceWMS::db_out_preAssign(QString store_no, int agv_id, QString &storage_no, QString key_part_no)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
     //预分配查询:（取其中一笔）
     QString query_sql;
@@ -180,7 +183,7 @@ RET_CODE InterfaceWMS::db_updateTaskStatus(QString store_no, int status, QString
  * Modefy/Date:
 ********************************************************************************************************/
 
-RET_CODE InterfaceWMS::db_queryTaskAvailable(QVector< QVector<QString> > &res)
+RET_CODE InterfaceWMS::db_queryTaskAvailable(QVector< QStringList > &res)
 {
     int rownum, colnum;
     QString err_msg;
@@ -205,7 +208,7 @@ RET_CODE InterfaceWMS::db_queryTaskAvailable(QVector< QVector<QString> > &res)
 RET_CODE InterfaceWMS::db_preAssign(QString store_no, int agv_id, int type, QString &storage_no)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
     //预分配查询:（取其中一笔）
     QString query_sql;
@@ -254,7 +257,7 @@ RET_CODE InterfaceWMS::db_preAssign(QString store_no, int agv_id, int type, QStr
 RET_CODE InterfaceWMS::db_preAssignByDis(QString store_no, int agv_id, int type, QString current_station_key, QString &storage_no)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
     //预分配查询:（取所有）
     QString query_sql;
@@ -311,6 +314,20 @@ RET_CODE InterfaceWMS::db_preAssignByDis(QString store_no, int agv_id, int type,
 }
 /********************************************************************************************************
  * Function Name :                  db_cancelPreAssign
+ * Function Main Usage:             取消预分配
+ * Author/Date:
+ * Modefy/Date:
+********************************************************************************************************/
+RET_CODE InterfaceWMS::db_cancelPreAssign(QString store_no, QString storag_no)
+{
+    QString err_msg;
+    //取消预分配:
+    QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='0',AGV_ID='',WORK_TIME= datetime('now', 'localtime') WHERE storag_no = '%1' AND STORE_NO='%2' ").arg(storag_no).arg(store_no);
+    bool ret = m_pDB->DBUpdate(update_sql, err_msg);
+    return ret ? RET_OK : RET_DB_ERROR;
+}
+/********************************************************************************************************
+ * Function Name :                  db_cancelPreAssign
  * Function Main Usage:             取消预分配(type:1-出库 0-入库)
  *
  * Author/Date:
@@ -319,7 +336,7 @@ RET_CODE InterfaceWMS::db_preAssignByDis(QString store_no, int agv_id, int type,
 RET_CODE InterfaceWMS::db_cancelPreAssign(QString store_no, int agv_id, int type)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
     //预分配查询:（取其中一笔）
     QString query_sql = QString("SELECT * FROM R_STORE_STATUS_T WHERE STATUS='2' AND STORE_NO='%1' AND AGV_ID='%2' ")\
@@ -357,7 +374,7 @@ RET_CODE InterfaceWMS::db_cancelPreAssign(QString store_no, int agv_id, int type
 RET_CODE InterfaceWMS::db_inStock(QString store_no, QString storage_no, int agv_id, QString key_part_no)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
 
     //查询是否已预分配
@@ -400,7 +417,7 @@ RET_CODE InterfaceWMS::db_inStock(QString store_no, QString storage_no, int agv_
 RET_CODE InterfaceWMS::db_outStock(QString store_no, QString storage_no, int agv_id)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
 
     //查询是否已预分配
@@ -439,7 +456,7 @@ RET_CODE InterfaceWMS::db_outStock(QString store_no, QString storage_no, int agv
 RET_CODE InterfaceWMS::db_queryAvailable(QString store_no, int status, int& count, int key_part_no)
 {
     int colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
 
     //查询是否已预分配
@@ -483,7 +500,7 @@ bool InterfaceWMS::db_log(QString store_no, QString storage_no, QString user_id,
 RET_CODE InterfaceWMS::db_newStore(QString store_no, QString store_name, QString user)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
 
     //查询是否已存在
@@ -521,7 +538,7 @@ RET_CODE InterfaceWMS::db_newStore(QString store_no, QString store_name, QString
 RET_CODE InterfaceWMS::db_newStorage(QString store_no, QString storage_no, QString user)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
 
     //查询是否已存在
@@ -569,7 +586,7 @@ RET_CODE InterfaceWMS::db_newStorage(QString store_no, QString storage_no, QStri
 RET_CODE InterfaceWMS::db_updateStorage(QString store_no, QString storage_no, QString key_part_no, int status, QString user)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
 
     //查询是否存在
@@ -613,7 +630,7 @@ RET_CODE InterfaceWMS::db_updateStorage(QString store_no, QString storage_no, QS
 RET_CODE InterfaceWMS::db_updateStorage(QString store_no, QString storage_no, QString key_part_no, int status, QString user, int count)
 {
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
 
     //查询是否存在
@@ -658,7 +675,7 @@ RET_CODE InterfaceWMS::db_queryStorageMap(QMap<QString, STATION_INFO> & mapping_
 {
     mapping_table.clear();
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
     QString query_sql = QString("SELECT T1.STORE_NO, T1.STORAGE_NO, T1.MAP_STATION_ID, REALX, REALY, READY_STATION_ID, T3.COUNT FROM C_STORAGE_DEF_T AS T1, agv_station AS T2 , R_STORE_STATUS_T AS T3 WHERE T1.MAP_STATION_ID = ID AND T1.STORE_NO = T3.STORE_NO AND T1.STORAGE_NO = T3.STORAGE_NO;");
     bool ret = m_pDB->DBQuery(query_sql, rownum, colnum, res, err_msg);
@@ -688,7 +705,7 @@ RET_CODE InterfaceWMS::db_queryTaskInfo(QMap<std::pair<QString, QString>, TASK_I
 {
     mapping_task.clear();
     int rownum, colnum;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString err_msg;
     QString query_sql = QString("SELECT FROM_STORE_NO, TO_STORE_NO, PRIORITY, STRATEGY FROM C_TASK_DEF_T");
     bool ret = m_pDB->DBQuery(query_sql, rownum, colnum, res, err_msg);
@@ -718,7 +735,7 @@ RET_CODE InterfaceWMS::db_queryTaskInfo(QMap<std::pair<QString, QString>, TASK_I
  * Modefy/Date:
 ********************************************************************************************************/
 
-RET_CODE InterfaceWMS::db_queryStorage(QString store_no, QVector< QVector<QString> > &res)
+RET_CODE InterfaceWMS::db_queryStorage(QString store_no, QVector< QStringList > &res)
 {
     int rownum, colnum;
     QString err_msg;
@@ -747,7 +764,7 @@ RET_CODE InterfaceWMS::db_queryStorageStatus(QString store_no, QString storage_n
 {
     int rownum, colnum;
     QString err_msg;
-    QVector< QVector<QString> > res;
+    QVector< QStringList > res;
     QString query_sql = QString("SELECT ifnull(STATUS,0), ifnull(KEY_PART_NO,'') FROM R_STORE_STATUS_T");
 
     if(store_no.trimmed() != "ALL")
