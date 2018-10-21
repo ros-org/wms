@@ -87,7 +87,6 @@ RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QStrin
     else
     {
         storage_no = res.at(use_index%rownum).at(0);
-        qDebug()<<"预分配的储位:"<<storage_no<<"Material:"<<res.at(0).at(1);
         //预分配更新:
         QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',AGV_ID=%1,WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
         ret = m_pDB->DBUpdate(update_sql, err_msg);

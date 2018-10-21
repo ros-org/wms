@@ -1,4 +1,4 @@
-#include "tcpmodbus.h"
+﻿#include "tcpmodbus.h"
 #include "../common.h"
 
 TcpModbus::TcpModbus(QString _ip, int _port, int _id, bool _haveB, QObject *parent) :
@@ -43,8 +43,8 @@ void TcpModbus::writeValue(bool AOrB)
     else if(!AOrB && updateB){
         QByteArray qba;
 
-        qba[0] = (char)((writeA>>8) & 0xFF);
-        qba[1] = (char)(writeA & 0xFF);
+        qba[0] = (char)((writeB>>8) & 0xFF);
+        qba[1] = (char)(writeB & 0xFF);
         qDebug()<<"write B"<<id<<"============="<<writeB;
         if(master->WriteSingleRegister(++write_id,ADD_WRITE_B,qba)){
             updateB = false;

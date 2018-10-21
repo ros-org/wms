@@ -67,23 +67,27 @@ void APIThread::praseOpcMsg(QString storage_no, int times)
                     //[agvid] [优先级] [do] [where] [do] [where]
                     //码垛相关任务优先级最高
                     //TODO 指定x号车
-                    task.append("1 2 pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no).append(" ").append(key_part_no)\
+                    task.append("0 2 pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no).append(" ").append(key_part_no)\
                             .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no)\
                             .append(" pick ").append(QString::number(mapping_table.value(key_tray_out).map_id)).append(" ").append(store_emptytray).append(" ").append(storage_no_tray).append(" ").append(QString::number(TRAY))\
                             .append(" put ").append(QString::number(mapping_table.value(key_tray_in).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no).append(" ").append(QString::number(TRAY));
 
-                    //查询可用的小车停车区
-                    QString store_wait = "F3_WAIT";
-                    //TODO 暂时任务完成后都返回1号停车位
-                    QString storage_no_wait = "01";
+                    //回停车位等待，由调度执行决定去哪个等待位置
+                    task.append(" wait 0");
 
-                    //                    RET_CODE ret_wait = inter_wms->db_preAssign(store_wait, 0, 0, storage_no_wait);
-                    QString key_wait = store_wait+"_"+storage_no_wait;
 
-                    //                    if(RET_OK == ret_wait)
-                    //                    {
-                    task.append(" move ").append(QString::number(mapping_table.value(key_wait).map_id));
-                    //                    }
+//                    //查询可用的小车停车区
+//                    QString store_wait = "F3_WAIT";
+//                    //暂时任务完成后都返回1号停车位
+//                    QString storage_no_wait = "01";
+
+//                    //                    RET_CODE ret_wait = inter_wms->db_preAssign(store_wait, 0, 0, storage_no_wait);
+//                    QString key_wait = store_wait+"_"+storage_no_wait;
+
+//                    //                    if(RET_OK == ret_wait)
+//                    //                    {
+//                    task.append(" move ").append(QString::number(mapping_table.value(key_wait).map_id));
+//                    //                    }
 
                     QString msg_len = QString::number(task.length()+4).rightJustified(4, '0');
                     QString send_task;
