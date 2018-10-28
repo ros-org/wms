@@ -176,23 +176,16 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
             QString store_no = request.value("store_no").toString();
             QString storage_no = request.value("storage_no").toString();
             RET_CODE ret = inter_wms->db_cancelPreAssign(store_no, storage_no);
-//            response.insert("retcode", ret);
-//            if(RET_OK == ret)
-//            {
-//                response.insert("retmsg", "储位信息更新成功");
-//                updateClientStorage(store_no, storage_no, material_id, status);
-//            }
-//            else
-//            {
-//                RET_CODE ret = inter_wms->db_queryStorageStatus(store_no, storage_no, material_id, status);
-//                if(RET_OK == ret && status == 2)
-//                {
-//                    status = (material_id.size()) ? 1: 0;
-//                    //恢复为之前的状态
-//                    updateClientStorage(store_no, storage_no, material_id, status);
-//                }
-//                response.insert("retmsg", "储位信息更新失败");
-//            }
+            response.insert("retcode", ret);
+            if(RET_OK == ret)
+            {
+                response.insert("retmsg", "储位信息更新成功");
+                updateClientStorage(store_no, storage_no, material_id, status);
+            }
+            else
+            {
+                response.insert("retmsg", "储位信息更新失败");
+            }
 
             break;
         }

@@ -69,7 +69,7 @@ void TcpModbus::readValue(bool AOrB)
 
         if(AOrB){
             if(new_read != readA){
-                qDebug()<<"line  read A"<<id<<"============="<<new_read;
+                qDebug()<<"read A"<<id<<"============="<<new_read;
 
                 if(new_read != readA+1){
                     readA = new_read;
@@ -84,7 +84,7 @@ void TcpModbus::readValue(bool AOrB)
             }
         }else{
             if(new_read != readB){
-                qDebug()<<"line  read B"<<id<<"============="<<new_read;
+                qDebug()<<"read B"<<id<<"============="<<new_read;
                 if(new_read != readB+1){
                     readB = new_read;
                     writeB = new_read;
