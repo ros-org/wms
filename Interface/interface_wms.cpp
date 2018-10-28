@@ -58,6 +58,7 @@ void InterfaceWMS::db_disconnect()
  * modify: 自动展板机不记录数量，只记录是否可用，可用情况下，轮流使用
  *          count > 0 可用  count<=0 不可用
  * 除了展板机也不会有其他count类型的 ，key part no 略去不用
+ * 取消 展板机预分配模式
 ********************************************************************************************************/
 RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QString &storage_no, QString key_part_no)
 {
@@ -69,7 +70,7 @@ RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QStrin
     QString query_sql;
 
     //task preassign
-    query_sql = QString("SELECT STORAGE_NO FROM R_STORE_STATUS_T WHERE STORE_NO='%1' AND STATUS='0' AND count >0 ").arg(store_no);
+    query_sql = QString("SELECT STORAGE_NO FROM R_STORE_STATUS_T WHERE STORE_NO='%1' AND count >0 ").arg(store_no);
 //    query_sql = QString("SELECT STORAGE_NO, MAX(COUNT) FROM R_STORE_STATUS_T WHERE STORE_NO='%1' ORDER BY STATUS DESC, STORAGE_NO ASC limit 1")
 //            .arg(store_no);
     bool ret = m_pDB->DBQuery(query_sql, rownum, colnum, res, err_msg);
@@ -87,14 +88,16 @@ RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QStrin
     else
     {
         storage_no = res.at(use_index%rownum).at(0);
-        //预分配更新:
-        QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',AGV_ID=%1,WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
-        ret = m_pDB->DBUpdate(update_sql, err_msg);
-        if(ret){
-            ++use_index;
-        }
-        return ret ? RET_OK : RET_DB_ERROR;
+//        //预分配更新:
+//        QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',AGV_ID=%1,WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
+//        ret = m_pDB->DBUpdate(update_sql, err_msg);
+//        if(ret){
+//            ++use_index;
+//        }
+//        return ret ? RET_OK : RET_DB_ERROR;
     }
+
+    return RET_OK;
 }
 
 /********************************************************************************************************
