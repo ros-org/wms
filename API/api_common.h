@@ -43,7 +43,6 @@ typedef enum STORE_TYPE
     OUT_STOCK = 1
 }STORE_TYPE;
 
-
 enum
 {
     EMPTY = 0,

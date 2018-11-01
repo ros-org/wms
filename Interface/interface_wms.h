@@ -26,7 +26,9 @@ public:
     //取消预分配
     RET_CODE db_cancelPreAssign(QString store_no, int agv_id, int type);
     //取消预分配
-    RET_CODE db_cancelPreAssign(QString store_no, QString storag_no);
+    RET_CODE db_cancelPreAssign(QString store_no, QString storage_no, QString &material_id);
+    //enable auto tray
+    RET_CODE db_autoTrayEnable(QString store_no, QString storage_no, bool enable);
     //记日志
     bool db_log(QString store_no, QString storage_no, QString user_id, int type,  QString key_part_no);
     //新增库别
@@ -41,6 +43,8 @@ public:
     RET_CODE db_queryStorageMap(QMap<QString, STATION_INFO> &mapping_table);
     //查询库存
     RET_CODE db_queryStorage(QString store_no, QVector< QStringList > &res);
+    //
+    RET_CODE db_queryAutotrayEnable(QString store_no, QVector<bool> &res);
     //查询库位信息
     RET_CODE db_queryStorageStatus(QString store_no, QString storage_no, QString & key_part_no, int & status);
     //查询可用储位数量

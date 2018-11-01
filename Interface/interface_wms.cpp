@@ -160,7 +160,7 @@ RET_CODE InterfaceWMS::db_out_preAssign(QString store_no, int agv_id, QString &s
 RET_CODE InterfaceWMS::db_updateTaskStatus(QString store_no, int status, QString to_store)
 {
     QString err_msg;
-    //    qDebug()<<"库区:"<<store_no<<"任务置为:"<<status<<",目标库区:"<<to_store;
+    //qDebug()<<"库区:"<<store_no<<"任务置为:"<<status<<",目标库区:"<<to_store;
     //更新任务状态:
     QString update_sql;
     if(status == 1)
@@ -320,14 +320,36 @@ RET_CODE InterfaceWMS::db_preAssignByDis(QString store_no, int agv_id, int type,
  * Author/Date:
  * Modefy/Date:
 ********************************************************************************************************/
-RET_CODE InterfaceWMS::db_cancelPreAssign(QString store_no, QString storag_no)
+RET_CODE InterfaceWMS::db_cancelPreAssign(QString store_no, QString storage_no, QString &material_id)
 {
     QString err_msg;
+    int count,column;
+    QVector< QStringList > res;
+    QString query_sql = QString("SELECT KEY_PART_NO FROM R_STORE_STATUS_T WHERE storage_no='%2' AND STORE_NO='%1'")\
+            .arg(store_no).arg(storage_no);
+
+    bool ret = m_pDB->DBQuery(query_sql, count, column, res, err_msg);
+    if(!ret)return RET_DB_ERROR;
+    material_id = "";
+    if(column > 0)
+    {
+        material_id = res.at(0).at(0);
+    }
     //取消预分配:
-    QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='0',AGV_ID='',WORK_TIME= datetime('now', 'localtime') WHERE storag_no = '%1' AND STORE_NO='%2' ").arg(storag_no).arg(store_no);
+    QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='0',AGV_ID='',WORK_TIME= datetime('now', 'localtime') WHERE storage_no = '%1' AND STORE_NO='%2' ").arg(storage_no).arg(store_no);
+    ret = m_pDB->DBUpdate(update_sql, err_msg);
+    return ret ? RET_OK : RET_DB_ERROR;
+}
+
+RET_CODE InterfaceWMS::db_autoTrayEnable(QString store_no, QString storage_no, bool enable)
+{
+    QString err_msg;
+    int count = enable?1:0;
+    QString update_sql = QString("UPDATE R_STORE_STATUS_T SET count='%3' WHERE storage_no = '%1' AND STORE_NO='%2' ").arg(storage_no).arg(store_no).arg(count);
     bool ret = m_pDB->DBUpdate(update_sql, err_msg);
     return ret ? RET_OK : RET_DB_ERROR;
 }
+
 /********************************************************************************************************
  * Function Name :                  db_cancelPreAssign
  * Function Main Usage:             取消预分配(type:1-出库 0-入库)
@@ -751,6 +773,29 @@ RET_CODE InterfaceWMS::db_queryStorage(QString store_no, QVector< QStringList > 
     {
         return RET_DB_ERROR;
     }
+    return RET_OK;
+}
+
+RET_CODE InterfaceWMS::db_queryAutotrayEnable(QString store_no, QVector<bool> &res)
+{
+    int rownum, colnum;
+    QString err_msg;
+    QVector< QStringList > ress;
+    QString query_sql = QString("SELECT COUNT FROM R_STORE_STATUS_T WHERE store_no = '%1';").arg(store_no);
+
+    bool ret = m_pDB->DBQuery(query_sql, rownum, colnum, ress, err_msg);
+
+    if(!ret)
+    {
+        return RET_DB_ERROR;
+    }
+
+    if(colnum<=0)return RET_OK;
+
+    for(int i=0;i<rownum;++i){
+        res.append(ress.at(i).at(0).toInt()>0);
+    }
+
     return RET_OK;
 }
 

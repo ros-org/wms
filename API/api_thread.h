@@ -52,6 +52,7 @@ private:
 
     //更新客户端储位信息
     void updateClientStorage(QString _store_no, QString _storage_no,  QString _key_part_no, int _status);
+    void updateClientAutoTrayEnable(QString _store_no, QString _storage_no, bool enable);
     int sendQueueNumber;
     //消息缓存
     QQueue<std::pair<QString, QWebSocket*> > receive_buff;

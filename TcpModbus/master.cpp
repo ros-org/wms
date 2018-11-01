@@ -95,7 +95,8 @@ void Master::slotStateChanged(QAbstractSocket::SocketState s)
         isConnected = false;
     }
 
-    if(s == QAbstractSocket::UnconnectedState || s == QAbstractSocket::ClosingState){
+    if(s == QAbstractSocket::UnconnectedState){
+        QyhSleep(5000);
         socket->connectToHost(ip,port);
     }
 }
