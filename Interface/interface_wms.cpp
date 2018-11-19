@@ -340,7 +340,7 @@ RET_CODE InterfaceWMS::db_cancelPreAssign(QString store_no, QString storage_no, 
         material_id = res.at(0).at(0);
     }
     //取消预分配:
-    QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='0',AGV_ID='',WORK_TIME= datetime('now', 'localtime') WHERE storage_no = '%1' AND STORE_NO='%2' ").arg(storage_no).arg(store_no);
+    QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='0',TASK_STATUS='0',AGV_ID='',WORK_TIME= datetime('now', 'localtime') WHERE storage_no = '%1' AND STORE_NO='%2' ").arg(storage_no).arg(store_no);
     ret = m_pDB->DBUpdate(update_sql, err_msg);
     return ret ? RET_OK : RET_DB_ERROR;
 }
