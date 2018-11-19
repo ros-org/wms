@@ -71,8 +71,8 @@ RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QStrin
 
     //task preassign
     query_sql = QString("SELECT STORAGE_NO FROM R_STORE_STATUS_T WHERE STORE_NO='%1' AND count >0 ").arg(store_no);
-//    query_sql = QString("SELECT STORAGE_NO, MAX(COUNT) FROM R_STORE_STATUS_T WHERE STORE_NO='%1' ORDER BY STATUS DESC, STORAGE_NO ASC limit 1")
-//            .arg(store_no);
+    //    query_sql = QString("SELECT STORAGE_NO, MAX(COUNT) FROM R_STORE_STATUS_T WHERE STORE_NO='%1' ORDER BY STATUS DESC, STORAGE_NO ASC limit 1")
+    //            .arg(store_no);
     bool ret = m_pDB->DBQuery(query_sql, rownum, colnum, res, err_msg);
     //    qDebug()<<rownum;
 
@@ -88,13 +88,13 @@ RET_CODE InterfaceWMS::db_counter_preAssign(QString store_no, int agv_id, QStrin
     else
     {
         storage_no = res.at(++use_index%rownum).at(0);
-//        //预分配更新:
-//        QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',AGV_ID=%1,WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
-//        ret = m_pDB->DBUpdate(update_sql, err_msg);
-//        if(ret){
-//            ++use_index;
-//        }
-//        return ret ? RET_OK : RET_DB_ERROR;
+        //        //预分配更新:
+        //        QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',AGV_ID=%1,WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
+        //        ret = m_pDB->DBUpdate(update_sql, err_msg);
+        //        if(ret){
+        //            ++use_index;
+        //        }
+        //        return ret ? RET_OK : RET_DB_ERROR;
     }
 
     return RET_OK;
@@ -157,7 +157,7 @@ RET_CODE InterfaceWMS::db_out_preAssign(QString store_no, int agv_id, QString &s
  * Author/Date:
  * Modefy/Date:
 ********************************************************************************************************/
-RET_CODE InterfaceWMS::db_updateTaskStatus(QString store_no, int status, QString to_store)
+RET_CODE InterfaceWMS::db_updateTaskStatus(QString from_store, int status, QString to_store,int store_type)
 {
     QString err_msg;
     //qDebug()<<"库区:"<<store_no<<"任务置为:"<<status<<",目标库区:"<<to_store;
@@ -165,7 +165,11 @@ RET_CODE InterfaceWMS::db_updateTaskStatus(QString store_no, int status, QString
     QString update_sql;
     if(status == 1)
     {
-        update_sql= QString("UPDATE R_STORE_STATUS_T SET TASK_STATUS='%3', TASK_DEST = '%2', WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%1' AND STATUS='1' AND TASK_STATUS = '0'").arg(store_no).arg(to_store).arg(status);
+        update_sql= QString("UPDATE R_STORE_STATUS_T SET TASK_STATUS='%3', TASK_DEST = '%2', WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%1' AND STATUS='1' AND TASK_STATUS = '0'").arg(from_store).arg(to_store).arg(status);
+        if(store_type!=-1)
+        {
+            update_sql.append(QString(" AND KEY_PART_NO = '%1' ").arg(store_type));
+        }
     }
     else if(status == 2)
     {
@@ -240,7 +244,7 @@ RET_CODE InterfaceWMS::db_preAssign(QString store_no, int agv_id, int type, QStr
     else
     {
         storage_no = res.at(0).at(1);
-        qDebug()<<"预分配的储位:"<<storage_no;
+        //qDebug()<<"预分配的储位:"<<storage_no;
         //预分配更新:
         QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',AGV_ID='%1',WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
         ret = m_pDB->DBUpdate(update_sql, err_msg);
@@ -306,7 +310,7 @@ RET_CODE InterfaceWMS::db_preAssignByDis(QString store_no, int agv_id, int type,
             }
         }
         storage_no = min_storage_no;
-        qDebug()<<"预分配的储位:"<<storage_no;
+        //qDebug()<<"预分配的储位:"<<storage_no;
         //预分配更新:
         QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='2',AGV_ID='%1',WORK_TIME= datetime('now', 'localtime') WHERE STORE_NO='%2' AND STORAGE_NO='%3'").arg(agv_id).arg(store_no).arg(storage_no);
         ret = m_pDB->DBUpdate(update_sql, err_msg);

@@ -50,7 +50,7 @@ public:
     //查询可用储位数量
     RET_CODE db_queryAvailable(QString store_no, int status, int& count, int key_part_no);
     //更新任务信息
-    RET_CODE db_updateTaskStatus(QString store_no, int status, QString to_store);
+    RET_CODE db_updateTaskStatus(QString from_store, int status, QString to_store, int store_type);
     //查询目前可以执行的任务
     RET_CODE db_queryTaskAvailable(QVector< QStringList > &res);
     //计数类储位预分配

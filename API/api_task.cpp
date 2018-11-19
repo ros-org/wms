@@ -53,7 +53,6 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
         response.insert("type", MSG_TYPE_RESPONSE);
         response.insert("retcode", "-1");
         response.insert("retmsg", "消息格式错误");
-
     }
     else
     {
@@ -143,27 +142,27 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
             inter_wms->db_queryAvailable(store_no_out, 1, from_available, store_type);
             inter_wms->db_queryAvailable(store_no_in, 0, to_available, -1);
             tasknum = std::min(from_available, to_available);
-            inter_wms->db_updateTaskStatus(store_no_out, 1, store_no_in);
-//            for(int i = 0; i < tasknum; i++)
-//            {
-//                QString storage_no_out, storage_no_in;
-//                QString key_part_no = QString::number(store_type);
-//                RET_CODE ret_out = inter_wms->db_out_preAssign(store_no_out, 0, storage_no_out, key_part_no);
-//                RET_CODE ret_in = inter_wms->db_preAssign(store_no_in, 0, 0, storage_no_in);
-//                QString key_out = store_no_out+"_"+storage_no_out;
-//                QString key_in = store_no_in+"_"+storage_no_in;
-//                QString task;
+            inter_wms->db_updateTaskStatus(store_no_out, 1, store_no_in,store_type);
+            //            for(int i = 0; i < tasknum; i++)
+            //            {
+            //                QString storage_no_out, storage_no_in;
+            //                QString key_part_no = QString::number(store_type);
+            //                RET_CODE ret_out = inter_wms->db_out_preAssign(store_no_out, 0, storage_no_out, key_part_no);
+            //                RET_CODE ret_in = inter_wms->db_preAssign(store_no_in, 0, 0, storage_no_in);
+            //                QString key_out = store_no_out+"_"+storage_no_out;
+            //                QString key_in = store_no_in+"_"+storage_no_in;
+            //                QString task;
 
-//                if(RET_OK == ret_out && RET_OK == ret_in)
-//                {
-//                    //[agvid] [优先级] [do] [where] [do] [where]
-//                    task.append("0 1 pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)
-//                            .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no);
-//                    qDebug()<<"wms receive task:"<<task;
-//                    //send to agv_dispatch
-//                    emit sig_response("127.0.0.1", task.toLatin1(),1);
-//                }
-//            }
+            //                if(RET_OK == ret_out && RET_OK == ret_in)
+            //                {
+            //                    //[agvid] [优先级] [do] [where] [do] [where]
+            //                    task.append("0 1 pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)
+            //                            .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no);
+            //                    qDebug()<<"wms receive task:"<<task;
+            //                    //send to agv_dispatch
+            //                    emit sig_response("127.0.0.1", task.toLatin1(),1);
+            //                }
+            //            }
             if(tasknum)
             {
                 response.insert("retmsg", "任务已成功发送");
@@ -306,7 +305,7 @@ void APIThread::updateClientStorage(QString _store_no, QString _storage_no,  QSt
 void APIThread::auto_generate_task()
 {
     //查询目前可以执行的任务
-    inter_wms->db_updateTaskStatus("", 2, "");
+    inter_wms->db_updateTaskStatus("", 2, "",-1);
 
     //生成任务
     QVector< QStringList > res;
@@ -320,33 +319,45 @@ void APIThread::auto_generate_task()
         store_no_in = query_res.at(3);
         key_part_no = query_res.at(2);
         QString storage_no_out, storage_no_in;
-        RET_CODE ret_out = inter_wms->db_out_preAssign(store_no_out, 0, storage_no_out, key_part_no);
+
         RET_CODE ret_in = inter_wms->db_preAssign(store_no_in, 0, 0, storage_no_in);
-        QString key_out = store_no_out+"_"+storage_no_out;
-        QString key_in = store_no_in+"_"+storage_no_in;
-        QString task;
-        int priority = 1;
 
-        if(mapping_task.contains(std::make_pair(store_no_out, store_no_in)))
-        {
-            priority = mapping_task.value(std::make_pair(store_no_out, store_no_in)).priority;
-        }
-        if(RET_OK == ret_out && RET_OK == ret_in)
-        {
-            //[agvid] [优先级] [do] [where] [do] [where]
-            task.append("0 ").append(priority).append(" pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)\
-                    .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no);
+        if(ret_in == RET_OK){
+            RET_CODE ret_out = inter_wms->db_out_preAssign(store_no_out, 0, storage_no_out, key_part_no);
+            if(RET_OK == ret_out)
+            {
+                updateClientStorage(store_no_in, storage_no_in, 0, 2);
+                updateClientStorage(store_no_out, storage_no_out, key_part_no, 2);
 
-            //回停车位等待，由调度执行决定去哪个等待位置
-            task.append(" wait 0");
+                QString key_out = store_no_out+"_"+storage_no_out;
+                QString key_in = store_no_in+"_"+storage_no_in;
+                QString task;
+                int priority = 1;
 
-            QString msg_len = QString::number(task.length()+4).rightJustified(4, '0');
-            QString send_task;
-            send_task.append("*").append(msg_len).append(task).append("#");
+                if(mapping_task.contains(std::make_pair(store_no_out, store_no_in)))
+                {
+                    priority = mapping_task.value(std::make_pair(store_no_out, store_no_in)).priority;
+                }
 
-            qDebug()<<"wms receive task:"<<send_task;
-            //send to agv_dispatch
-            emit sig_response("127.0.0.1", send_task.toLatin1(),1);
+                //[agvid] [优先级] [do] [where] [do] [where]
+                task.append("0 ").append(priority).append(" pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)\
+                        .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no);
+
+                //回停车位等待，由调度执行决定去哪个等待位置
+                task.append(" wait 0");
+
+                QString msg_len = QString::number(task.length()+4).rightJustified(4, '0');
+                QString send_task;
+                send_task.append("*").append(msg_len).append(task).append("#");
+
+                qDebug()<<"wms receive task:"<<send_task;
+                //send to agv_dispatch
+                emit sig_response("127.0.0.1", send_task.toLatin1(),1);
+            }else{
+                //roll back storage_in !
+                QString material;
+                inter_wms->db_cancelPreAssign(store_no_in,storage_no_in,material);
+            }
         }
     }
 }

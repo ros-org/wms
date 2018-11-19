@@ -14,7 +14,8 @@ TcpModbus::TcpModbus(QString _ip, int _port, int _id, bool _haveB, QObject *pare
     writeB(-2),
     updateA(false),
     updateB(false),
-    quit(false)
+    quit(false),
+    agv_turn(false)
 {
     store_no_a = QString("A%1").arg(id);
     store_no_b = QString("B%1").arg(id);
@@ -52,6 +53,22 @@ void TcpModbus::writeValue(bool AOrB)
     }
 }
 
+void TcpModbus::readAgv()
+{
+    static int read_id = 0;
+    if(read_id>255)read_id = 0;
+    QByteArray qba;
+    int add = ADD_READ_AGV;
+    if(master->ReadDiscreteInputs(++read_id,add,1,qba))
+    {
+        bool agv_turn_temp = ((char)qba[0]>0);
+        if(agv_turn_temp!=agv_turn){
+            agv_turn = agv_turn_temp;
+            qDebug()<<"read AGV"<<id<<"============="<<agv_turn;
+        }
+    }
+}
+
 void TcpModbus::readValue(bool AOrB)
 {
     static int read_id = 0;
@@ -78,8 +95,12 @@ void TcpModbus::readValue(bool AOrB)
                 }else{
                     readA = new_read;
                     writeA = new_read;
-                    updateA = false;
-                    emit sig_readOpcMsg(store_no_a, new_read, ip, port);
+                    if(agv_turn){
+                        updateA = false;
+                        emit sig_readOpcMsg(store_no_a, new_read, ip, port);
+                    }else{
+                        updateA = true;
+                    }
                 }
             }
         }else{
@@ -92,8 +113,12 @@ void TcpModbus::readValue(bool AOrB)
                 }else{
                     readB = new_read;
                     writeB = new_read;
-                    updateB = false;
-                    emit sig_readOpcMsg(store_no_b, new_read, ip, port);
+                    if(agv_turn){
+                        updateB = false;
+                        emit sig_readOpcMsg(store_no_b, new_read, ip, port);
+                    }else{
+                        updateA = true;
+                    }
                 }
             }
         }
@@ -107,7 +132,9 @@ void TcpModbus::run()
 
     while(!quit)
     {
-        //read ;
+        readAgv();
+
+        //read a;
         readValue(true);
 
         //read b;

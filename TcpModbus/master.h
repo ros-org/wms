@@ -27,6 +27,8 @@ public:
     bool WriteSingleRegister(int id, int startAddress, const QByteArray &values);
     bool ReadInputRegister(int id, int startAddress, int numInputs,QByteArray &result);
 
+    bool ReadDiscreteInputs(int id, int startAddress, int numInputs, QByteArray &result);
+
     void test();
 
     void startQuery();

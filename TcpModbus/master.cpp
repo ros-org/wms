@@ -86,6 +86,12 @@ bool Master::ReadInputRegister(int id, int startAddress, int numInputs, QByteArr
     return WriteData(CreateReadHeader(id, startAddress, numInputs, fctReadInputRegister), id,fctReadInputRegister,result);
 }
 
+bool Master::ReadDiscreteInputs(int id,int startAddress,int numInputs,QByteArray &result)
+{
+    lastRequstNumber = numInputs;
+    return WriteData(CreateReadHeader(id, startAddress, numInputs, fctReadDiscreteInputs), id,fctReadDiscreteInputs,result);
+}
+
 void Master::slotStateChanged(QAbstractSocket::SocketState s)
 {
     //qDebug()<<"socket state = "<<s;
@@ -106,6 +112,7 @@ void Master::slotTimeToQuery()
     static int id_read = 0;
     if(id_read>=255)id_read = 0;
     QByteArray qba;
+
     if(!ReadInputRegister(++id_read,8192,1,qba)){
         qDebug()<<"read fail";
     }else{
@@ -154,9 +161,15 @@ void Master::slotReadyRead()
                 getResponse = true;
             }
             //// 9 = mbap 7Byte + 功能码 1Byte + 长度 1Byte
-            else if(lastFunction == fctReadInputRegister&& qba[7] == (char)lastFunction && qba.length()>=9+2*lastRequstNumber)
+            else if(lastFunction == fctReadInputRegister && qba[7] == (char)lastFunction && qba.length()>=9+2*lastRequstNumber)
             {
                 response = qba.mid(9,2*lastRequstNumber);
+                getResponse = true;
+            }
+
+            else if(lastFunction == fctReadDiscreteInputs && qba[7] == (char)lastFunction && qba.length()>=9+1*lastRequstNumber)
+            {
+                response = qba.mid(9,1*lastRequstNumber);
                 getResponse = true;
             }
         }

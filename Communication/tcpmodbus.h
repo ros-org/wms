@@ -5,6 +5,7 @@
 #include <QThread>
 #include "../TcpModbus/master.h"
 
+#define ADD_READ_AGV  0
 #define ADD_READ_A  8192
 #define ADD_READ_B  8194
 #define ADD_WRITE_A    24576
@@ -23,6 +24,8 @@ signals:
 public slots:
     void slot_writeOpcMsg(QString storage_no, bool b);
 private:    
+
+    void readAgv();
 
     void readValue(bool AOrB);
 
@@ -48,6 +51,8 @@ private:
     QString store_no_b;
 
     bool quit;
+
+    bool agv_turn;
 };
 
 #endif // TCPMODBUS_H
