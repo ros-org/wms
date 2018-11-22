@@ -634,7 +634,7 @@ RET_CODE InterfaceWMS::db_updateStorage(QString store_no, QString storage_no, QS
     }
 
     //更新库存
-    QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='%1',KEY_PART_NO='%2',WORK_TIME=datetime('now', 'localtime'), MODIFY_USER='%3',AGV_ID='0' WHERE STORE_NO='%4' AND STORAGE_NO='%5';").arg(status).arg(key_part_no).arg(user).arg(store_no).arg(storage_no);
+    QString update_sql = QString("UPDATE R_STORE_STATUS_T SET STATUS='%1',KEY_PART_NO='%2',WORK_TIME=datetime('now', 'localtime'), MODIFY_USER='%3',AGV_ID='0',TASK_STATUS='0' WHERE STORE_NO='%4' AND STORAGE_NO='%5';").arg(status).arg(key_part_no).arg(user).arg(store_no).arg(storage_no);
     ret =  m_pDB->DBUpdate(update_sql, err_msg);
 
     if(ret)
