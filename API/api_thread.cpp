@@ -34,7 +34,7 @@ void APIThread::run()
     init_taskinfo();
     while(!quit_flag)
     {
-        msleep(10);
+        msleep(50);
         if(!receive_buff.isEmpty())
         {
             websocketMsgLock.lock();

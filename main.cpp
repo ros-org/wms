@@ -55,15 +55,15 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    //    QDir dir;
-    //    if(!dir.exists("logs"))
-    //    {
-    //        dir.mkdir("logs");
-    //    }
-    //    logFile.setFileName("logs/wms_debuglog_"+QDate::currentDate().toString("yyyyMMdd")+"_"+QTime::currentTime().toString("hhmmss")+".txt");
-    //    logFile.open(QIODevice::WriteOnly | QIODevice::Append);
+        QDir dir;
+        if(!dir.exists("logs"))
+        {
+            dir.mkdir("logs");
+        }
+        logFile.setFileName("logs/wms_debuglog_"+QDate::currentDate().toString("yyyyMMdd")+"_"+QTime::currentTime().toString("hhmmss")+".txt");
+        logFile.open(QIODevice::WriteOnly | QIODevice::Append);
 
-    //    qInstallMessageHandler(customMessageHandler);
+        qInstallMessageHandler(customMessageHandler);
 
 
     /*
