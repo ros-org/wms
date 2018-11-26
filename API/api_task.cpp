@@ -344,7 +344,7 @@ void APIThread::auto_generate_task()
                         .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no);
 
                 //回停车位等待，由调度执行决定去哪个等待位置
-                task.append(" wait 0");
+                //task.append(" wait 0");
 
                 QString msg_len = QString::number(task.length()+4).rightJustified(4, '0');
                 QString send_task;
