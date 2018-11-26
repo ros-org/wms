@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
@@ -41,7 +41,7 @@
 #ifndef FORTUNESERVER_H
 #define FORTUNESERVER_H
 
-#define MAX_NUM_CLIENT 20
+#define MAX_NUM_CLIENT 10
 
 #include <QStringList>
 #include <QTcpServer>

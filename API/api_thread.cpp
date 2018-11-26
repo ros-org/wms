@@ -1,5 +1,5 @@
-﻿#include "api_thread.h"
-
+#include "api_thread.h"
+#include "../common.h"
 
 /********************************************************************************************************
  * Function Name :                  APIThread
@@ -34,7 +34,7 @@ void APIThread::run()
     init_taskinfo();
     while(!quit_flag)
     {
-        msleep(10);
+        msleep(50);
         if(!receive_buff.isEmpty())
         {
             websocketMsgLock.lock();

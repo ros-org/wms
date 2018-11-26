@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2015 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
@@ -88,29 +88,12 @@ void FortuneThread::run()
             //---------------------------------------------------------------------------------
 
             int optval;
-#ifdef WIN32
+#ifdef _WIN32
             int optlen = sizeof(optval);
-#else
-            socklen_t optlen = sizeof(optval);
-#endif
-            // 开启keepalive属性
-#ifdef WIN32
             optval = 1;
             setsockopt(socketDescriptor, SOL_SOCKET, SO_KEEPALIVE, (const char*)&optval, optlen);
-            // 探测尝试的次数.如果第1次探测包就收到响应了,则后2次的不再发.
-            optval = 3;
-            //???????
-            //setsockopt(socketDescriptor, SOL_TCP, TCP_KEEPCNT, (const char*)&optval, optlen);
-            // 如该连接在1秒内没有任何数据往来,则进行探测
-            optval =1;
-            //???????
-            //setsockopt(socketDescriptor, SOL_TCP, TCP_KEEPIDLE, (const char*)&optval, optlen);
-            // 探测时发包的时间间隔为3 秒
-            optval =3;
-            //???????
-            //setsockopt(socketDescriptor, SOL_TCP, TCP_KEEPINTVL, (const char*)&optval, optlen);
-
 #else
+            socklen_t optlen = sizeof(optval);
             optval = 1;
             setsockopt(socketDescriptor, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
             // 探测尝试的次数.如果第1次探测包就收到响应了,则后2次的不再发.
@@ -123,8 +106,6 @@ void FortuneThread::run()
             optval =3;
             setsockopt(socketDescriptor, SOL_TCP, TCP_KEEPINTVL, &optval, optlen);
 #endif
-            //unsigned int timeout = 10000;  // 10s
-            //setsockopt(socketDescriptor, IPPROTO_TCP, TCP_USER_TIMEOUT, &timeout, sizeof(timeout));
 
             //------------------------------------------------------------------------------------------------------------------
 
@@ -195,7 +176,7 @@ void FortuneThread::run()
 
             }
         }while(receivedBuffer.length() >12 && returnValue == 0);
-
+        msleep(50);
     }
 
     //    tcpSocket.disconnectFromHost();
