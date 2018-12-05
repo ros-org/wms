@@ -150,7 +150,7 @@ void TcpModbus::run()
             writeValue(false);
         }
 
-        msleep(1000);
+        QyhSleep(1000);
     }
 }
 

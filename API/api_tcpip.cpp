@@ -102,11 +102,11 @@ void APIThread::prase_request(QByteArray msg, QString clientIP)
             if(!ret)
             {
                 updateClientStorage(params.at(0), params.at(1),  params.at(3), 1);
-                if(params.at(0) == "F3_MD")
-                {
-                    //如果是码垛处托盘放好，需通知OPC
-                    emit sig_writeOpcMsg(params.at(1), true);
-                }
+//                if(params.at(0) == "F3_MD")
+//                {
+//                    //如果是码垛处托盘放好，需通知OPC
+//                    emit sig_writeOpcMsg(params.at(1), true);
+//                }
             }
         }
         break;
@@ -131,6 +131,8 @@ void APIThread::prase_request(QByteArray msg, QString clientIP)
                     //emit sig_writeOpcMsg(params.at(1), false);
                     //此处修改为空托盘预分配状态
                     inter_wms->db_updateStorage(params.at(0), params.at(1), "3", 2, "OPC");
+
+                    emit sig_writeOpcMsg(params.at(1), true);
                 }
                 updateClientStorage(params.at(0), params.at(1),  "", 0);
             }
