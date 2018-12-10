@@ -175,7 +175,14 @@ void APIThread::prase_request(QByteArray msg, QString clientIP)
         int count = 0;
         inter_wms->db_queryTaskCount(count);
         response = QString("%1").arg(count);
-        break;
+
+        //发送应答
+        QString msg_len = QString::number(response.length()+4).rightJustified(4, '0');
+        QString send_msg;
+        send_msg.append("*").append(msg_len).append(response).append("#");
+
+        emit sig_response(clientIP, send_msg.toLocal8Bit(), 1);
+        return ;
     }
     default:        //其他信息
     {

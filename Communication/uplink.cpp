@@ -58,6 +58,7 @@ void FortuneThread::MsgProcess()
     case 73:
     case 74:
     case 75:
+    case 76:
     {
         emit sig_receiveFrameEvent(LastFrameData,ClientIP,ClientPort, ThreadNo);
         break;
