@@ -803,6 +803,29 @@ RET_CODE InterfaceWMS::db_queryAutotrayEnable(QString store_no, QVector<bool> &r
     return RET_OK;
 }
 
+RET_CODE InterfaceWMS::db_queryTaskCount(int &res)
+{
+    res = 0;
+
+    int rownum, colnum;
+    QString err_msg;
+    QVector< QStringList > ress;
+    QString query_sql = QString("SELECT COUNT(*) FROM R_STORE_STATUS_T WHERE TASK_STATUS = '2';");
+
+    bool ret = m_pDB->DBQuery(query_sql, rownum, colnum, ress, err_msg);
+
+    if(!ret)
+    {
+        return RET_DB_ERROR;
+    }
+
+    if(rownum<=0 || colnum<=0)return RET_DB_ERROR;
+
+    res = ress.at(0).at(0).toInt();
+
+    return RET_OK;
+}
+
 /********************************************************************************************************
  * Function Name :                  db_queryStorage
  * Function Main Usage:             查询库存

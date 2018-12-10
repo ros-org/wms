@@ -102,11 +102,11 @@ void APIThread::prase_request(QByteArray msg, QString clientIP)
             if(!ret)
             {
                 updateClientStorage(params.at(0), params.at(1),  params.at(3), 1);
-//                if(params.at(0) == "F3_MD")
-//                {
-//                    //如果是码垛处托盘放好，需通知OPC
-//                    emit sig_writeOpcMsg(params.at(1), true);
-//                }
+                //                if(params.at(0) == "F3_MD")
+                //                {
+                //                    //如果是码垛处托盘放好，需通知OPC
+                //                    emit sig_writeOpcMsg(params.at(1), true);
+                //                }
             }
         }
         break;
@@ -167,6 +167,14 @@ void APIThread::prase_request(QByteArray msg, QString clientIP)
             RET_CODE ret = inter_wms->db_newStorage(params.at(0), params.at(1), params.at(2));
             response = STR(ret);
         }
+        break;
+    }
+
+    case 76:{
+        //查詢未完成的任務有多少
+        int count = 0;
+        inter_wms->db_queryTaskCount(count);
+        response = QString("%1").arg(count);
         break;
     }
     default:        //其他信息

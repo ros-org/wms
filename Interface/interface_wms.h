@@ -45,6 +45,8 @@ public:
     RET_CODE db_queryStorage(QString store_no, QVector< QStringList > &res);
     //
     RET_CODE db_queryAutotrayEnable(QString store_no, QVector<bool> &res);
+    //
+    RET_CODE db_queryTaskCount(int &res);
     //查询库位信息
     RET_CODE db_queryStorageStatus(QString store_no, QString storage_no, QString & key_part_no, int & status);
     //查询可用储位数量

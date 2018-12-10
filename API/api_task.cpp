@@ -7,9 +7,12 @@
 #define TODO_SEND_TASK          3
 #define TODO_CANCEL_PREASSIGN   4
 
+
 //TODO: huitou zai shuo
 #define TODO_AUTOTRAY_ENABLE    5//set auto tray enabled!
 #define TODO_REQUEST_AUTOTRAY   6//query auto tray enabled!
+#define TODO_REQUEST_TODO_TASK  7//查询当前有无 未执行的任务
+
 
 #define MSG_TYPE_REQUEST        0
 #define MSG_TYPE_RESPONSE       1
@@ -64,7 +67,6 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
         switch (msgType) {
         case TODO_REQUEST_STORAGE:
         {
-            //{ "todo":1, "type":0, "queuenumber":1, "store_no" : "F1_MATERIAL" }
             if(!request.contains("store_no"))
             {
                 response.insert("retcode", "-1");
@@ -143,26 +145,6 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
             inter_wms->db_queryAvailable(store_no_in, 0, to_available, -1);
             tasknum = std::min(from_available, to_available);
             inter_wms->db_updateTaskStatus(store_no_out, 1, store_no_in,store_type);
-            //            for(int i = 0; i < tasknum; i++)
-            //            {
-            //                QString storage_no_out, storage_no_in;
-            //                QString key_part_no = QString::number(store_type);
-            //                RET_CODE ret_out = inter_wms->db_out_preAssign(store_no_out, 0, storage_no_out, key_part_no);
-            //                RET_CODE ret_in = inter_wms->db_preAssign(store_no_in, 0, 0, storage_no_in);
-            //                QString key_out = store_no_out+"_"+storage_no_out;
-            //                QString key_in = store_no_in+"_"+storage_no_in;
-            //                QString task;
-
-            //                if(RET_OK == ret_out && RET_OK == ret_in)
-            //                {
-            //                    //[agvid] [优先级] [do] [where] [do] [where]
-            //                    task.append("0 1 pick ").append(QString::number(mapping_table.value(key_out).map_id)).append(" ").append(store_no_out).append(" ").append(storage_no_out).append(" ").append(key_part_no)
-            //                            .append(" put ").append(QString::number(mapping_table.value(key_in).map_id)).append(" ").append(store_no_in).append(" ").append(storage_no_in).append(" ").append(key_part_no);
-            //                    qDebug()<<"wms receive task:"<<task;
-            //                    //send to agv_dispatch
-            //                    emit sig_response("127.0.0.1", task.toLatin1(),1);
-            //                }
-            //            }
             if(tasknum)
             {
                 response.insert("retmsg", "任务已成功发送");
@@ -223,7 +205,13 @@ void APIThread::prase_json_request(QJsonObject request, QWebSocket* client)
             }
             updateClientAutoTrayEnable(store_no, storage_no1, enable1);
             updateClientAutoTrayEnable(store_no, storage_no2, enable2);
-
+            break;
+        }
+        case TODO_REQUEST_TODO_TASK:{
+            int count = 0;
+            inter_wms->db_queryTaskCount(count);
+            response.insert("count", count);
+            break;
         }
         default:
             break;
